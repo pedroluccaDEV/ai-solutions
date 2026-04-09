@@ -1,0 +1,673 @@
+import { useState, useEffect, useRef } from "react";
+
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+  :root {
+    --bg: #0A0A0F;
+    --surface: #111118;
+    --surface2: #18181F;
+    --border: #1E1E2A;
+    --accent: #C8F53F;
+    --accent2: #7B61FF;
+    --text: #F0EFF8;
+    --muted: #6B6A80;
+    --warm: #FF7A45;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  .lp-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 20px 0;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text); letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .nav-cta {
+    background: var(--accent); color: #0A0A0F;
+    padding: 10px 22px; border-radius: 100px;
+    font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,245,63,0.3); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding-top: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 70% 50%, rgba(123,97,255,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 20% 80%, rgba(200,245,63,0.07) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.4;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 70%);
+  }
+  .hero-inner {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(200,245,63,0.1); border: 1px solid rgba(200,245,63,0.25);
+    padding: 6px 16px; border-radius: 100px;
+    font-size: 0.78rem; font-weight: 500; color: var(--accent);
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p {
+    font-size: 1.1rem; color: var(--muted); line-height: 1.65;
+    max-width: 440px; margin-bottom: 36px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; animation: fadeUp 0.6s 0.3s ease both; }
+  .btn-primary {
+    background: var(--accent); color: #0A0A0F;
+    padding: 14px 28px; border-radius: 100px;
+    font-weight: 700; font-size: 0.95rem; border: none; cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(200,245,63,0.35); }
+  .btn-ghost {
+    background: transparent; color: var(--text);
+    padding: 14px 28px; border-radius: 100px;
+    font-weight: 500; font-size: 0.95rem;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--muted); background: var(--surface); }
+
+  /* HERO VISUAL */
+  .hero-visual { animation: fadeIn 0.8s 0.4s ease both; }
+  .chat-window {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  }
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface2);
+  }
+  .chat-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .chat-name { font-weight: 600; font-size: 0.9rem; }
+  .chat-status { font-size: 0.75rem; color: var(--accent); }
+  .chat-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 82%; padding: 12px 16px; border-radius: 16px; font-size: 0.88rem; line-height: 1.5; }
+  .msg-in { background: var(--surface2); border-bottom-left-radius: 4px; align-self: flex-start; }
+  .msg-out {
+    background: linear-gradient(135deg, var(--accent2), #9B7FFF);
+    color: white; border-bottom-right-radius: 4px; align-self: flex-end;
+  }
+  .msg-typing { display: flex; align-items: center; gap: 4px; padding: 12px 16px; }
+  .typing-dot {
+    width: 7px; height: 7px; background: var(--muted); border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .tag {
+    font-size: 0.72rem; padding: 4px 10px; border-radius: 100px;
+    font-weight: 600; letter-spacing: 0.02em;
+  }
+  .tag-green { background: rgba(200,245,63,0.15); color: var(--accent); }
+  .tag-purple { background: rgba(123,97,255,0.15); color: #A38CFF; }
+  .tag-orange { background: rgba(255,122,69,0.15); color: var(--warm); }
+
+  /* STATS */
+  .stats-bar {
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0;
+  }
+  .stats-inner { display: flex; justify-content: center; gap: 80px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.4rem; font-weight: 800;
+    color: var(--accent); letter-spacing: -0.03em;
+  }
+  .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION */
+  section { padding: 100px 0; }
+  .section-tag {
+    display: inline-block;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800; letter-spacing: -0.03em;
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  .section-sub { color: var(--muted); font-size: 1.05rem; line-height: 1.65; max-width: 520px; }
+
+  /* ABOUT */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .micro-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 40px; }
+  .micro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 22px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .micro-card:hover { border-color: rgba(200,245,63,0.3); }
+  .micro-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(200,245,63,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .micro-text strong { display: block; font-size: 0.92rem; font-weight: 600; margin-bottom: 2px; }
+  .micro-text span { font-size: 0.82rem; color: var(--muted); }
+
+  .about-visual {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px;
+    position: relative; overflow: hidden;
+  }
+  .funnel {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 28px;
+  }
+  .funnel-step {
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 0.85rem; font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .f1 { background: rgba(123,97,255,0.15); color: #A38CFF; width: 100%; }
+  .f2 { background: rgba(123,97,255,0.12); color: #A38CFF; width: 82%; }
+  .f3 { background: rgba(200,245,63,0.15); color: var(--accent); width: 65%; }
+  .f4 { background: rgba(200,245,63,0.25); color: var(--accent); width: 48%; }
+  .funnel-label { font-size: 0.75rem; color: var(--muted); margin-top: 8px; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; position: relative; }
+  .steps::before {
+    content: '';
+    position: absolute; top: 32px; left: 15%; right: 15%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), var(--border), transparent);
+    pointer-events: none;
+  }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px 28px;
+    position: relative; transition: all 0.3s;
+  }
+  .step:hover { border-color: rgba(200,245,63,0.3); transform: translateY(-4px); }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+    color: var(--accent); margin-bottom: 20px;
+  }
+  .step h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+  .step p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* BEFORE/AFTER */
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 60px; }
+  .ba-card {
+    border-radius: 20px; padding: 32px;
+    border: 1px solid var(--border);
+  }
+  .ba-before { background: rgba(255,60,60,0.05); border-color: rgba(255,60,60,0.15); }
+  .ba-after { background: rgba(200,245,63,0.04); border-color: rgba(200,245,63,0.2); }
+  .ba-label {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  .ba-before .ba-label { color: #FF6B6B; }
+  .ba-after .ba-label { color: var(--accent); }
+  .ba-items { display: flex; flex-direction: column; gap: 12px; }
+  .ba-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.88rem; line-height: 1.5; }
+  .ba-before .ba-item { color: #E0C0C0; }
+  .ba-after .ba-item { color: #D0F0A0; }
+  .ba-icon { flex-shrink: 0; margin-top: 1px; }
+
+  /* WHO */
+  .who-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 60px; }
+  .who-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: all 0.2s;
+  }
+  .who-card:hover { border-color: rgba(200,245,63,0.25); background: var(--surface2); }
+  .who-emoji { font-size: 1.6rem; flex-shrink: 0; }
+  .who-card h4 { font-weight: 600; margin-bottom: 4px; font-size: 0.92rem; }
+  .who-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* CTA */
+  .cta-section {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 28px; padding: 80px 60px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-glow {
+    position: absolute; width: 500px; height: 300px;
+    background: radial-gradient(ellipse, rgba(200,245,63,0.1) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800; letter-spacing: -0.03em;
+    margin-bottom: 16px; position: relative;
+  }
+  .cta-section p { color: var(--muted); font-size: 1.05rem; margin-bottom: 40px; position: relative; }
+  .cta-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; position: relative; }
+  .btn-wa {
+    background: #25D366; color: white;
+    padding: 16px 32px; border-radius: 100px;
+    font-weight: 700; font-size: 1rem; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.2s;
+  }
+  .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(37,211,102,0.35); }
+
+  /* FOOTER */
+  footer {
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted); font-size: 0.82rem;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .hero-inner, .about-grid, .ba-grid { grid-template-columns: 1fr; gap: 40px; }
+    .steps { grid-template-columns: 1fr; }
+    .steps::before { display: none; }
+    .who-grid { grid-template-columns: 1fr; }
+    .stats-inner { gap: 40px; }
+    .cta-section { padding: 48px 24px; }
+    .hero-visual { display: none; }
+  }
+`;
+
+const ChatBubble = ({ msg, delay = 0 }) => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  if (!visible) return null;
+  return (
+    <div className={`msg ${msg.out ? "msg-out" : "msg-in"}`}>
+      {msg.text}
+    </div>
+  );
+};
+
+export default function LandingPage() {
+  const [chatStep, setChatStep] = useState(0);
+  const chatRef = useRef(null);
+
+  const messages = [
+    { text: "Oi! Quero saber mais sobre o serviço de vocês 🙋", out: false, delay: 500 },
+    { text: "Oi! Que ótimo ter você aqui 😊 Você tem um negócio ou prestação de serviços? Posso te mostrar como podemos ajudar agora mesmo.", out: true, delay: 1500 },
+    { text: "Sim! Tenho uma clínica estética, recebo muitos contatos mas fico perdida pra responder tudo.", out: false, delay: 3000 },
+    { text: "Entendo! Pra clínicas estéticas isso é muito comum. Vou te mostrar como você responderia todos os seus contatos automaticamente — sem perder nenhum. Posso agendar uma demo rápida?", out: true, delay: 4500 },
+  ];
+
+  useEffect(() => {
+    const steps = messages.map((m, i) => {
+      return setTimeout(() => {
+        setChatStep(i + 1);
+      }, m.delay);
+    });
+    return () => steps.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <>
+      <style>{styles}</style>
+
+      {/* NAV */}
+      <nav>
+        <div className="lp-wrap">
+          <div className="nav-inner">
+            <div className="logo">Responde<span>.</span>Já</div>
+            <button className="nav-cta" onClick={() => window.open("https://wa.me/5500000000000", "_blank")}>
+              Falar com especialista
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-bg" />
+        <div className="hero-grid" />
+        <div className="lp-wrap">
+          <div className="hero-inner">
+            <div>
+              <div className="hero-badge">
+                <span className="badge-dot" />
+                Atendendo leads enquanto você dorme
+              </div>
+              <h1>
+                Pare de <em>perder vendas</em> por falta de resposta rápida
+              </h1>
+              <p>
+                Seu negócio responde, qualifica e organiza cada lead automaticamente — no tom certo, na hora certa, sem você precisar digitar nada.
+              </p>
+              <div className="hero-ctas">
+                <button className="btn-primary" onClick={() => window.open("https://wa.me/5500000000000", "_blank")}>
+                  <span>💬</span> Quero ver funcionando
+                </button>
+                <button className="btn-ghost" onClick={() => document.getElementById("how").scrollIntoView({behavior:"smooth"})}>
+                  Como funciona →
+                </button>
+              </div>
+            </div>
+
+            <div className="hero-visual">
+              <div className="chat-window" ref={chatRef}>
+                <div className="chat-header">
+                  <div className="chat-avatar">🤖</div>
+                  <div>
+                    <div className="chat-name">Atendimento Automático</div>
+                    <div className="chat-status">● Online agora</div>
+                  </div>
+                </div>
+                <div className="chat-body">
+                  {messages.map((msg, i) =>
+                    chatStep > i ? (
+                      <ChatBubble key={i} msg={msg} delay={0} />
+                    ) : null
+                  )}
+                  {chatStep < messages.length && (
+                    <div className="msg msg-in msg-typing">
+                      <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
+                    </div>
+                  )}
+                  {chatStep >= messages.length && (
+                    <div>
+                      <div className="tag-row">
+                        <span className="tag tag-green">✓ Lead qualificado</span>
+                        <span className="tag tag-purple">Clínica estética</span>
+                        <span className="tag tag-orange">Alta intenção</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <div className="stats-bar">
+        <div className="lp-wrap">
+          <div className="stats-inner">
+            <div className="stat">
+              <div className="stat-num">3s</div>
+              <div className="stat-label">Tempo médio de resposta</div>
+            </div>
+            <div className="stat">
+              <div className="stat-num">+68%</div>
+              <div className="stat-label">Leads convertidos</div>
+            </div>
+            <div className="stat">
+              <div className="stat-num">24h</div>
+              <div className="stat-label">Atendimento ininterrupto</div>
+            </div>
+            <div className="stat">
+              <div className="stat-num">0</div>
+              <div className="stat-label">Mensagens sem resposta</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ABOUT */}
+      <section>
+        <div className="lp-wrap">
+          <div className="about-grid">
+            <div>
+              <span className="section-tag">O que é</span>
+              <h2 className="section-title">Seu atendimento no piloto automático</h2>
+              <p className="section-sub">
+                Toda vez que alguém entra em contato com seu negócio, uma resposta inteligente e personalizada já sai — sem você mexer em nada.
+                O sistema entende o que o lead quer, responde como você responderia, e ainda organiza tudo pra você acompanhar.
+              </p>
+
+              <div className="micro-cards">
+                <div className="micro-card">
+                  <div className="micro-icon">⚡</div>
+                  <div className="micro-text">
+                    <strong>Resposta em segundos, não horas</strong>
+                    <span>Nenhum lead fica esperando — e leads que esperam, vão embora</span>
+                  </div>
+                </div>
+                <div className="micro-card">
+                  <div className="micro-icon">🎯</div>
+                  <div className="micro-text">
+                    <strong>Entende o que o lead realmente quer</strong>
+                    <span>Não manda resposta genérica — responde com contexto e intenção</span>
+                  </div>
+                </div>
+                <div className="micro-card">
+                  <div className="micro-icon">📋</div>
+                  <div className="micro-text">
+                    <strong>Organiza tudo automaticamente</strong>
+                    <span>Veja quem tem interesse real e onde cada lead está no processo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="about-visual">
+              <div style={{marginBottom: 12, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)"}}>
+                FUNIL DE ATENDIMENTO
+              </div>
+              <div className="funnel">
+                <div className="funnel-step f1"><span>💬</span> Mensagem recebida</div>
+                <div className="funnel-step f2"><span>🧠</span> Intenção identificada</div>
+                <div className="funnel-step f3"><span>✉️</span> Resposta personalizada enviada</div>
+                <div className="funnel-step f4"><span>🏆</span> Lead qualificado</div>
+              </div>
+              <div className="funnel-label">Tudo isso acontece em menos de 3 segundos, automaticamente.</div>
+
+              <div style={{marginTop: 28, padding: "16px", background: "rgba(200,245,63,0.06)", borderRadius: 12, border: "1px solid rgba(200,245,63,0.15)"}}>
+                <div style={{fontSize: "0.78rem", color: "var(--accent)", fontWeight: 700, marginBottom: 6}}>HOJE ÀS 14:23</div>
+                <div style={{fontSize: "0.85rem", color: "var(--muted)", lineHeight: 1.6}}>
+                  12 novos contatos recebidos → 12 respondidos → 7 qualificados → 3 prontos para fechar
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW */}
+      <section id="how" style={{background: "var(--surface2)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)"}}>
+        <div className="lp-wrap">
+          <div style={{textAlign: "center", maxWidth: 540, margin: "0 auto"}}>
+            <span className="section-tag">Como funciona</span>
+            <h2 className="section-title">3 passos. Simples assim.</h2>
+            <p className="section-sub" style={{margin: "0 auto"}}>
+              Você não precisa mudar nada no seu processo atual. A solução se encaixa no que você já usa.
+            </p>
+          </div>
+          <div className="steps">
+            <div className="step">
+              <div className="step-num">1</div>
+              <h3>Lead manda mensagem</h3>
+              <p>Pode ser pelo WhatsApp, site, Instagram — não importa de onde vem o contato.</p>
+            </div>
+            <div className="step">
+              <div className="step-num">2</div>
+              <h3>Resposta vai na hora</h3>
+              <p>Uma resposta personalizada e inteligente é enviada automaticamente, no tom do seu negócio.</p>
+            </div>
+            <div className="step">
+              <div className="step-num">3</div>
+              <h3>Você só aparece pra fechar</h3>
+              <p>Receba um resumo do lead qualificado e entre em cena só quando o contato já está quente.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BEFORE AFTER */}
+      <section>
+        <div className="lp-wrap">
+          <div style={{textAlign: "center", maxWidth: 540, margin: "0 auto 0"}}>
+            <span className="section-tag">Transformação</span>
+            <h2 className="section-title">O antes e o depois</h2>
+          </div>
+          <div className="ba-grid">
+            <div className="ba-card ba-before">
+              <div className="ba-label"><span>❌</span> Sem a solução</div>
+              <div className="ba-items">
+                {[
+                  "Lead manda mensagem às 22h e vai embora sem resposta",
+                  "Você gasta horas repetindo as mesmas informações toda semana",
+                  "Não sabe quem tem interesse real e quem só estava curiosando",
+                  "Oportunidades escorregam entre os dedos por falta de acompanhamento",
+                  "A equipe sobrecarregada erra no atendimento nos momentos errados",
+                ].map((t, i) => (
+                  <div className="ba-item" key={i}><span className="ba-icon">✗</span>{t}</div>
+                ))}
+              </div>
+            </div>
+            <div className="ba-card ba-after">
+              <div className="ba-label"><span>✅</span> Com a solução</div>
+              <div className="ba-items">
+                {[
+                  "Resposta em segundos, a qualquer hora — inclusive de madrugada",
+                  "Zero tempo gasto com mensagens repetitivas e perguntas básicas",
+                  "Você sabe exatamente quem está pronto pra fechar",
+                  "Nenhum lead fica sem resposta ou cai no esquecimento",
+                  "Atendimento profissional e consistente sempre, sem depender de humor",
+                ].map((t, i) => (
+                  <div className="ba-item" key={i}><span className="ba-icon">✓</span>{t}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WHO */}
+      <section style={{background: "var(--surface2)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)"}}>
+        <div className="lp-wrap">
+          <div style={{textAlign: "center", maxWidth: 540, margin: "0 auto"}}>
+            <span className="section-tag">Para quem é</span>
+            <h2 className="section-title">Isso é pra você se...</h2>
+          </div>
+          <div className="who-grid">
+            {[
+              { emoji: "🏥", title: "Clínicas e consultórios", desc: "Muitos contatos por dia, equipe sobrecarregada e dificuldade em organizar agendamentos." },
+              { emoji: "🏠", title: "Imobiliárias e corretores", desc: "Leads que precisam de resposta imediata antes de ir pra concorrência." },
+              { emoji: "💇", title: "Salões e estúdios", desc: "Atendimento no WhatsApp caótico, reservas perdidas e clientes sem retorno." },
+              { emoji: "🎓", title: "Escolas e cursos", desc: "Muitas dúvidas repetitivas tomando tempo de quem deveria focar em ensinar." },
+              { emoji: "🔧", title: "Prestadores de serviço", desc: "Orçamentos que demoram, clientes que some, e oportunidades que vão embora." },
+              { emoji: "🛒", title: "E-commerce e varejo", desc: "Perguntas sobre produto, entrega e troca que consomem horas desnecessárias." },
+            ].map((w, i) => (
+              <div className="who-card" key={i}>
+                <div className="who-emoji">{w.emoji}</div>
+                <div>
+                  <h4>{w.title}</h4>
+                  <p>{w.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section>
+        <div className="lp-wrap">
+          <div className="cta-section">
+            <div className="cta-glow" />
+            <h2>Quer isso no seu negócio?</h2>
+            <p>
+              Mostre pra gente como você recebe seus contatos hoje e a gente monta uma demonstração personalizada pra você — sem compromisso.
+            </p>
+            <div className="cta-buttons">
+              <button className="btn-wa" onClick={() => window.open("https://wa.me/5500000000000?text=Oi!%20Quero%20ver%20o%20atendimento%20autom%C3%A1tico%20funcionando%20no%20meu%20neg%C3%B3cio", "_blank")}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.557 4.118 1.526 5.845L.057 23.273a.75.75 0 00.92.92l5.49-1.474A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.513-5.186-1.407l-.371-.219-3.846 1.031 1.044-3.754-.24-.386A9.939 9.939 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                Falar no WhatsApp agora
+              </button>
+              <button className="btn-primary" style={{background: "transparent", border: "1px solid var(--border)", color: "var(--text)"}}>
+                Agendar uma demo →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div className="lp-wrap">
+          <p>© 2025 Responde.Já · Todos os direitos reservados</p>
+        </div>
+      </footer>
+    </>
+  );
+}

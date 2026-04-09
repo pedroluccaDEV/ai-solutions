@@ -1,0 +1,55 @@
+FROM ubuntu:24.04
+
+# Instalar dependências do sistema CRÍTICAS
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    python3-pip \
+    python3-venv \
+    libmagic1 \
+    libgl1 \
+    libglib2.0-0 \
+    libnss3 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxi6 \
+    libxtst6 \
+    libxrandr2 \
+    libasound2 \
+    libatk1.0-0 \
+    libgtk-3-0 \
+    libgomp1 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libssl-dev \
+    libffi-dev \
+    build-essential \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-ca-certificates
+
+WORKDIR /app
+
+COPY . .
+
+# Criar e ativar venv
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Instalar requirements com resolução de conflitos
+RUN pip install --upgrade pip setuptools wheel
+
+# Instalar dependências problemáticas primeiro
+RUN pip install \
+    numpy==2.0.0 \
+    pydantic==2.6.0 \
+    pydantic-core==2.16.0
+
+# Instalar requirements principais
+RUN pip install -r requirements.txt
+
+# Instalação alternativa para PyMuPDF se ainda houver problemas
+RUN pip install --no-cache-dir PyMuPDF==1.23.8
+
+CMD ["python", "main.py"]
