@@ -1,14 +1,14 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 
-from schemas.v1.crm_schema import (
+from schemas.crm_schema import (
     LeadCreateSchema,
     LeadUpdateSchema,
     LeadOutSchema,
     AgentRunSchema,
     AgentRunOutSchema,
 )
-from services.v1.crm_service import LeadService, AgentService
+from services.crm_service import LeadService, AgentService
 
 router = APIRouter(tags=["CRM"])
 

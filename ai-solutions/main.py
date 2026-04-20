@@ -1,31 +1,21 @@
-#!/usr/bin/env python3
-"""
-AI CRM — Intelligent Lead Management System
-"""
-import os
-import sys
-import logging
-from datetime import datetime
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger = logging.getLogger(__name__)
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.router_registery import router, load_result
+from datetime import datetime
+import logging
+import os
+
+from core.config.init_db import init_db
+from routes.router_registery import register_routers
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="AI CRM",
-    description="CRM com agentes autônomos para gestão inteligente de leads.",
+    title="Zenith Server",
+    description="AI Services Platform",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
 )
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,28 +24,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
-
 
 @app.get("/", tags=["Health"])
 async def root():
     return {
-        "service": "ai-crm",
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "version": "1.0.0",
-        "docs": "/docs",
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 
 @app.on_event("startup")
 async def startup():
-    ok = len(load_result["successful"])
-    fail = len(load_result["failed"])
-    logger.info(f"🚀 AI CRM iniciado — {ok} rota(s) ok | {fail} erro(s)")
-    if load_result["failed"]:
-        for m in load_result["failed"]:
-            logger.error(f"❌ Falhou: {m}")
+    # 🔥 banco
+    await init_db()
+
+    # 🔥 rotas
+    result = register_routers(app)
+
+    logger.info(f"🚀 Server iniciado — {len(result['successful'])} módulos carregados")
 
 
 if __name__ == "__main__":
@@ -65,6 +51,4 @@ if __name__ == "__main__":
         "main:app",
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8000")),
-        reload=False,
-        log_level="info",
     )

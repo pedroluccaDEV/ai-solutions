@@ -782,8 +782,16 @@ export default function App() {
       <div className="mband">
         <div className="w">
           <div className="minner">
-            <div className="mtxt"><Layers size={15} color="#00ff62"/><span><strong>Isso é só o começo.</strong> Temos mais soluções para automatizar outras partes do seu negócio.</span></div>
-            <button className="mbtn">Ver todas as soluções <ExternalLink size={12}/></button>
+            <div className="mtxt">
+              <Layers size={15} color="#00ff62"/>
+              <span><strong>Isso é só o começo.</strong> Temos mais soluções para automatizar outras partes do seu negócio.</span>
+            </div>
+            <button 
+              className="mbtn" 
+              onClick={() => window.location.href = "/"}
+            >
+              Ver todas as soluções <ExternalLink size={12}/>
+            </button>
           </div>
         </div>
       </div>
@@ -798,7 +806,7 @@ export default function App() {
               <p className="sub">Mostre como você recebe seus contatos hoje e montamos uma demonstração personalizada — sem compromisso.</p>
               <div className="clist">
                 {[
-                  {href:"https://wa.me/5541999999999",ico:<MessageSquare size={16}/>,cls:"ci-w",t:"WhatsApp",s:"Resposta em até 5 minutos"},
+                  {href:"https://wa.me/5541988327983",ico:<MessageSquare size={16}/>,cls:"ci-w",t:"WhatsApp",s:"Resposta em até 5 minutos"},
                   {href:"mailto:ola@respondeja.com.br",ico:<Mail size={16}/>,cls:"ci-e",t:"E-mail",s:"ola@respondeja.com.br"},
                   {href:"tel:+554199999999",ico:<Phone size={16}/>,cls:"ci-p",t:"Telefone",s:"(41) 9 9999-9999 · Seg–Sex, 9h–18h"},
                 ].map((c,i)=>(

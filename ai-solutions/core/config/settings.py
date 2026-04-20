@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     PORT: int
 
     # Banco de dados
-    POSTGRES_URL: str
     MONGO_DB_NAME: str
     MONGO_URI: str
 

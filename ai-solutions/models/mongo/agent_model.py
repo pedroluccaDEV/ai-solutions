@@ -1,46 +1,82 @@
-from typing import Optional, List
-from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict
+
 from models.mongo.base import MongoModel
+
 
 class Agent(BaseModel, MongoModel):
     __collection__ = "agents"
 
-    id: str = Field(alias="_id")
+    __indexes__ = [
+        [("uid", 1)],
+        [("org", 1)],
+        [("category", 1)],
+        [("status", 1)],
+    ]
 
-    # Informações Básicas
+    # 🔧 Config Pydantic (v2)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_encoders={datetime: lambda v: v.isoformat()},
+    )
+
+    # ---------------------------------------
+    # 🆔 ID Mongo
+    # ---------------------------------------
+    id: Optional[str] = Field(default=None, alias="_id")
+
+    # ---------------------------------------
+    # 📌 Informações Básicas
+    # ---------------------------------------
     category: str
     isClone: bool = False
-    name: Optional[str] = None  # antigo cloneName
+    name: Optional[str] = None
     description: Optional[str] = None
 
-    # Configuração de Comportamento
+    # ---------------------------------------
+    # 🧠 Comportamento
+    # ---------------------------------------
     roleDefinition: str
     goal: str
     agentRules: str
     whenToUse: str
 
-    # Modelo de Linguagem
+    # ---------------------------------------
+    # 🤖 LLM
+    # ---------------------------------------
     model: int
 
-    # Listas
-    knowledgeBase: List[str] = []
-    tools: List[str] = []
-    mcps: List[str] = []
+    # ---------------------------------------
+    # 📚 Relacionamentos
+    # ---------------------------------------
+    knowledgeBase: List[str] = Field(default_factory=list)
+    tools: List[str] = Field(default_factory=list)
+    mcps: List[str] = Field(default_factory=list)
 
-    # Configurações Avançadas
+    # ---------------------------------------
+    # ⚙️ Config
+    # ---------------------------------------
     visibility: str
     status: str = "active"
 
-    # Personalização
+    # ---------------------------------------
+    # 🎨 UI
+    # ---------------------------------------
     color: str
 
-    # Campos de sistema
+    # ---------------------------------------
+    # 👤 Sistema
+    # ---------------------------------------
     uid: str
-    uid_export: Optional[str] = None  # Usuário que exportou o agente (para galeria)
+    uid_export: Optional[str] = None
     org: Optional[str] = None
-    type: Optional[str] = "playground"
-    memoryConfig: Optional[dict] = None
+    type: str = "playground"
+    memoryConfig: Optional[Dict] = None
 
-    # Timestamps
-    createdAt: Optional[str] = None
-updatedAt: Optional[str] = None
+    # ---------------------------------------
+    # ⏱️ Timestamps
+    # ---------------------------------------
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
